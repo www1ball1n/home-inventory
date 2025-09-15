@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>家庭物品管理系统</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1 { color: #2c3e50; }
+  #path { font-size: 14px; color: #666; margin: 6px 0 10px; }
+  ul { list-style-type: none; padding-left: 20px; }
+  li { margin: 5px 0; }
+  .space { font-weight: bold; cursor: pointer; }
+  .item.used { color: gray; text-decoration: line-through; }
+  button { margin-left: 5px; }
+  /* 搜索区 */
+  #searchWrap { margin: 10px 0; }
+  #results { margin-top: 6px; }
+  .result { padding: 4px 6px; border: 1px solid #ddd; border-radius: 6px; margin: 4px 0; }
+  .result strong { margin-right: 6px; }
+  .breadcrumb { font-size: 12px; color: #666; }
+  /* 高亮闪烁 */
+  .flash {
+    animation: flashbg 1.2s ease-out 1;
+  }
+  @keyframes flashbg {
+    0% { background: #fff59d; }
+    100% { background: transparent; }
+  }
+</style>
+</head>
+<body>
+  <h1>📦 家庭物品管理系统（树状结构 + 展开/收起 + 搜索）</h1>
+
+  <!-- 路径 -->
+  <div id="path"></div>
+
+  <!-- 全局按钮 -->
+  <div>
+    <button onclick="addSpace()">+空间</button>
+    <button onclick="addItem()">+物品</button>
+    <button onclick="goBack()">返回上级</button>
+    <button onclick="exportData()">导出数据</button>
+    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)" />
+    <button onclick="document.getElementById('importFile').click()">导入数据</button>
+  </div>
+
+  <!-- 搜索 -->
+  <div id="searchWrap">
+    <input id="searchInput" placeholder="搜索名称或描述（全局）" oninput="onSearchInput()" />
+    <button onclick="clearSearch()">清除</button>
+    <div id="results"></div>
+  </div>
+
+  <!-- 树/列表 -->
+  <ul id="list"></ul>
+
+  <script>
+    // ------------ 数据与状态 ------------
+    let data = JSON.parse(localStorage.getItem("storageTree")) || {
+      name: "🏠 家庭", type: "space", children: [], expanded: true
+    };
+    let currentPath = [data]; // 路径栈：从根开始
+    let flashTargetId = null; // 用于物品定位后高亮
+
+    // 给每个节点分配一个简易 id（首次运行或新建时）
+    function ensureIds(node) {
+      if (!node.id) node.id = "n_" + Math.random().toString(36).slice(2, 9);
+      if (node.type === "space" && Array.isArray(node.children)) {
+        node.children.forEach(ensureIds);
+      }
+    }
+    ensureIds(data);
+
+    function saveData() {
+      localStorage.setItem("storageTree", JSON.stringify(data));
+    }
+    function getCurrentNode() {
+      return currentPath[currentPath.length - 1];
+    }
+    function updatePathDisplay() {
+      document.getElementById("path").textContent =
+        "路径: " + currentPath.map(n => n.name).join(" > ");
+    }
+
+    // 根据节点查找从根到该节点的路径
+    function findPath(root, target) {
+      const path = [];
+      function dfs(node) {
+        path.push(node);
+        if (node === target) return true;
+        if (node.type === "space") {
+          for (const child of node.children) {
+            if (dfs(child)) return true;
+          }
+        }
+        path.pop();
+        return false;
+      }
+      dfs(root);
+      return path;
+    }
+    
+    // 导出数据
+    function exportData() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "storage_data.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 导入数据
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.type === "space" && Array.isArray(imported.children)) {
+            data = imported;
+            ensureIds(data);
+            currentPath = [data];
+            saveData();
+            updatePathDisplay();
+            renderList();
+            document.getElementById("searchInput").value = "";
+            document.getElementById("results").innerHTML = "";
+            alert("数据导入成功！");
+          } else {
+            alert("无效的数据格式！");
+          }
+        } catch (err) {
+          alert("读取文件失败或文件格式错误！");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ""; // 清空以便下次导入同一文件
+    }
+
+    // ------------ 渲染树 ------------
+    function renderNode(node, parent) {
+      const li = document.createElement("li");
+
+      if (node.type === "space") {
+        // 箭头 ▶ ▼
+        const arrow = document.createElement("span");
+        arrow.textContent = node.expanded ? "▼ " : "▶ ";
+        arrow.style.cursor = "pointer";
+        arrow.onclick = () => {
+          node.expanded = !node.expanded;
+          saveData(); renderList();
+        };
+
+        // 文件夹（双击进入）
+        const span = document.createElement("span");
+        span.textContent = "📂 " + node.name;
+        span.className = "space";
+        span.ondblclick = () => {
+          currentPath = findPath(data, node);
+          updatePathDisplay();
+          renderList();
+        };
+
+        li.appendChild(arrow);
+        li.appendChild(span);
+
+        // 文件夹功能：删除、+物品、+子空间
+        const addItemBtn = document.createElement("button");
+        addItemBtn.textContent = "+物品";
+        addItemBtn.onclick = () => {
+          const name = prompt("请输入物品名称：");
+          if (name) {
+            const item = { id: "n_" + Math.random().toString(36).slice(2, 9), name, type: "item", used: false };
+            node.children.push(item);
+            saveData(); renderList();
+          }
+        };
+        li.appendChild(addItemBtn);
+
+        const addSpaceBtn = document.createElement("button");
+        addSpaceBtn.textContent = "+子空间";
+        addSpaceBtn.onclick = () => {
+          const name = prompt("请输入子空间名称：");
+          if (name) {
+            const child = { id: "n_" + Math.random().toString(36).slice(2, 9), name, type: "space", children: [], expanded: true };
+            node.children.push(child);
+            saveData(); renderList();
+          }
+        };
+        li.appendChild(addSpaceBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "❌";
+        delBtn.onclick = () => {
+          if (confirm("确认删除空间？")) {
+            const idx = parent.children.indexOf(node);
+            parent.children.splice(idx, 1);
+            saveData(); renderList();
+          }
+        };
+        li.appendChild(delBtn);
+
+        // 子树
+        if (node.expanded) {
+          const ul = document.createElement("ul");
+          node.children.forEach(child => {
+            ul.appendChild(renderNode(child, node));
+          });
+          li.appendChild(ul);
+        }
+      } else {
+        // 物品
+        const span = document.createElement("span");
+        span.textContent = "📦 " + node.name + (node.desc ? " (" + node.desc + ")" : "");
+        span.className = "item";
+        if (node.used) span.classList.add("used");
+        span.id = node.id; // 用于定位高亮
+        if (flashTargetId === node.id) {
+          span.classList.add("flash");
+          setTimeout(() => {
+            span.classList.remove("flash");
+            if (flashTargetId === node.id) flashTargetId = null;
+          }, 1200);
+        }
+        li.appendChild(span);
+
+        // 用完
+        const usedBtn = document.createElement("button");
+        usedBtn.textContent = "用完";
+        usedBtn.onclick = () => {
+          node.used = !node.used;
+          saveData(); renderList();
+        };
+        li.appendChild(usedBtn);
+
+        // 描述
+        const descBtn = document.createElement("button");
+        descBtn.textContent = "描述";
+        descBtn.onclick = () => {
+          const desc = prompt("请输入物品描述：", node.desc || "");
+          if (desc !== null) {
+            node.desc = desc;
+            saveData(); renderList();
+          }
+        };
+        li.appendChild(descBtn);
+
+        // 删除
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "❌";
+        delBtn.onclick = () => {
+          if (confirm("确认删除物品？")) {
+            const idx = parent.children.indexOf(node);
+            parent.children.splice(idx, 1);
+            saveData(); renderList();
+          }
+        };
+        li.appendChild(delBtn);
+      }
+      return li;
+    }
+
+    function renderList() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      const node = getCurrentNode();
+      node.children.forEach(child => list.appendChild(renderNode(child, node)));
+    }
+
+    // ------------ 全局按钮 ------------
+    function addSpace() {
+      const name = prompt("请输入空间名称：");
+      if (name) {
+        const child = { id: "n_" + Math.random().toString(36).slice(2, 9), name, type: "space", children: [], expanded: true };
+        getCurrentNode().children.push(child);
+        saveData(); renderList();
+      }
+    }
+    function addItem() {
+      const name = prompt("请输入物品名称：");
+      if (name) {
+        const item = { id: "n_" + Math.random().toString(36).slice(2, 9), name, type: "item", used: false };
+        getCurrentNode().children.push(item);
+        saveData(); renderList();
+      }
+    }
+    function goBack() {
+      if (currentPath.length > 1) {
+        currentPath.pop();
+        updatePathDisplay();
+        renderList();
+      }
+    }
+
+    // ------------ 搜索 ------------
+    function onSearchInput() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const resultsBox = document.getElementById("results");
+      resultsBox.innerHTML = "";
+      if (!q) {
+        updatePathDisplay();
+        renderList();
+        return;
+      }
+      const hits = searchAll(data, q); // 返回匹配的节点数组
+      if (hits.length === 0) {
+        resultsBox.textContent = "无匹配结果";
+        return;
+      }
+      hits.forEach(hit => {
+        const div = document.createElement("div");
+        div.className = "result";
+        const typeLabel = hit.node.type === "space" ? "📂" : "📦";
+        const name =
+          hit.node.name +
+          (hit.node.type === "item" && hit.node.desc ? " (" + hit.node.desc + ")" : "") +
+          (hit.node.type === "item" && hit.node.used ? "（已用完）" : "");
+        const strong = document.createElement("strong");
+        strong.textContent = `${typeLabel} ${name}`;
+        const bc = document.createElement("div");
+        bc.className = "breadcrumb";
+        bc.textContent = "路径: " + hit.path.map(n => n.name).join(" > ");
+
+        const gotoBtn = document.createElement("button");
+        gotoBtn.textContent = "定位";
+        gotoBtn.onclick = () => {
+          // 设置 currentPath
+          currentPath = [...hit.path]; // 到达该节点（如果是 item，路径以父空间结尾；如果是空间，路径以该空间结尾）
+          // 确保沿途全部展开
+          currentPath.forEach(n => { if (n.type === "space") n.expanded = true; });
+          updatePathDisplay();
+
+          if (hit.node.type === "space") {
+            // 如果是空间：进入该空间即可
+            renderList();
+          } else {
+            // 如果是物品：进入父空间并高亮该物品
+            flashTargetId = hit.node.id;
+            renderList();
+            // 滚动到视图
+            const el = document.getElementById(hit.node.id);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        };
+
+        div.appendChild(strong);
+        div.appendChild(gotoBtn);
+        div.appendChild(bc);
+        resultsBox.appendChild(div);
+      });
+    }
+
+    // 深度优先搜索，返回匹配命中
+    // 命中结构：{ node, path }；path 为数组（从根到目标的“父空间”或空间本身）
+    function searchAll(root, q) {
+      const hits = [];
+      function dfs(node, path) {
+        if (node.type === "space") {
+          // 匹配空间名
+          if (node.name.toLowerCase().includes(q)) {
+            hits.push({ node, path: [...path, node] });
+          }
+          // 遍历子节点
+          node.children.forEach(child => {
+            if (child.type === "space") {
+              dfs(child, [...path, node]);
+            } else {
+              // 物品匹配：名称或描述
+              const txt = (child.name + " " + (child.desc || "")).toLowerCase();
+              if (txt.includes(q)) {
+                hits.push({ node: child, path: [...path, node] }); // path 以父空间结尾
+              }
+            }
+          });
+        }
+      }
+      dfs(root, []);
+      return hits;
+    }
+
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("results").innerHTML = "";
+      updatePathDisplay();
+      renderList();
+    }
+
+    // ------------ 初始化 ------------
+    updatePathDisplay();
+    renderList();
+  </script>
+</body>
+</html>
