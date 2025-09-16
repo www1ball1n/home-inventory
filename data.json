@@ -29,6 +29,24 @@
               "name": "海盐",
               "type": "item",
               "used": false
+            },
+            {
+              "id": "n_yae1t1t",
+              "name": "奶糖",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_3106vuu",
+              "name": "水",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_tx5gxyb",
+              "name": "牛奶",
+              "type": "item",
+              "used": false
             }
           ],
           "expanded": true
