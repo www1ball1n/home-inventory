@@ -22,7 +22,7 @@
               "id": "n_izeazaq",
               "name": "糖",
               "type": "item",
-              "used": false
+              "used": true
             },
             {
               "id": "n_w9owmm4",
@@ -34,7 +34,7 @@
               "id": "n_yae1t1t",
               "name": "奶糖",
               "type": "item",
-              "used": false
+              "used": true
             },
             {
               "id": "n_3106vuu",
@@ -46,7 +46,21 @@
               "id": "n_tx5gxyb",
               "name": "牛奶",
               "type": "item",
-              "used": false
+              "used": true
+            }
+          ],
+          "expanded": true
+        },
+        {
+          "id": "n_din6hzg",
+          "name": "2抽屉",
+          "type": "space",
+          "children": [
+            {
+              "id": "n_2pgqcyd",
+              "name": "综合香料",
+              "type": "item",
+              "used": true
             }
           ],
           "expanded": true
