@@ -53,6 +53,84 @@
               "name": "ee ",
               "type": "item",
               "used": false
+            },
+            {
+              "id": "n_cwi1thl",
+              "name": "香料1",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_r765huy",
+              "name": "香料2",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_7kfgjz7",
+              "name": "桂皮",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_eczrm9t",
+              "name": "八角",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_dmxwgon",
+              "name": "茴香",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_o4y7pdf",
+              "name": "香叶",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_8opgvwb",
+              "name": "白胡椒",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_0ik2fy2",
+              "name": "黑胡椒",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_k28knjq",
+              "name": "花椒",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_rfz7teq",
+              "name": "青花椒",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_20ktxyi",
+              "name": "干辣椒",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_4hzac2v",
+              "name": "二荆条辣椒面",
+              "type": "item",
+              "used": false
+            },
+            {
+              "id": "n_fsugrwr",
+              "name": "细辣椒面",
+              "type": "item",
+              "used": false
             }
           ],
           "expanded": true
