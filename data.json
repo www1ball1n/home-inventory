@@ -1,0 +1,36 @@
+{
+  "name": "🏠 家庭",
+  "type": "space",
+  "children": [
+    {
+      "id": "n_aohnobp",
+      "name": "左上柜",
+      "type": "space",
+      "children": [
+        {
+          "id": "n_6hu8z49",
+          "name": "上",
+          "type": "space",
+          "children": [
+            {
+              "id": "n_7w5m2qu",
+              "name": "盐",
+              "type": "item",
+              "used": true
+            },
+            {
+              "id": "n_izeazaq",
+              "name": "糖",
+              "type": "item",
+              "used": true
+            }
+          ],
+          "expanded": false
+        }
+      ],
+      "expanded": false
+    }
+  ],
+  "id": "n_psg5qdj",
+  "expanded": true
+}
