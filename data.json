@@ -46,7 +46,8 @@
               "id": "n_tx5gxyb",
               "name": "牛奶",
               "type": "item",
-              "used": true
+              "used": true,
+              "desc": "好好好"
             },
             {
               "id": "n_5q413vz",
