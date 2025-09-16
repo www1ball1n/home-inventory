@@ -16,19 +16,26 @@
               "id": "n_7w5m2qu",
               "name": "盐",
               "type": "item",
-              "used": true
+              "used": false,
+              "desc": ""
             },
             {
               "id": "n_izeazaq",
               "name": "糖",
               "type": "item",
-              "used": true
+              "used": false
+            },
+            {
+              "id": "n_m5or5f2",
+              "name": "海盐",
+              "type": "item",
+              "used": false
             }
           ],
-          "expanded": false
+          "expanded": true
         }
       ],
-      "expanded": false
+      "expanded": true
     }
   ],
   "id": "n_psg5qdj",
