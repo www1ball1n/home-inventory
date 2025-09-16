@@ -16,8 +16,7 @@
               "id": "n_7w5m2qu",
               "name": "盐",
               "type": "item",
-              "used": false,
-              "desc": ""
+              "used": false
             },
             {
               "id": "n_izeazaq",
@@ -26,7 +25,7 @@
               "used": false
             },
             {
-              "id": "n_m5or5f2",
+              "id": "n_w9owmm4",
               "name": "海盐",
               "type": "item",
               "used": false
